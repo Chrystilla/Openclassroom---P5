@@ -39,3 +39,4 @@ fetch("http://localhost:3000/api/products")
 }
 
 window.addEventListener('load', start)
+
