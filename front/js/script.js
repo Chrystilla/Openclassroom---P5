@@ -6,7 +6,7 @@
  *      3.2 Injecter dans le DOM
  */
 
-const start = function() {
+function startAllProduct () {
 fetch("http://localhost:3000/api/products")
     .then(function (res) {
         if (res.ok) {
@@ -38,5 +38,4 @@ fetch("http://localhost:3000/api/products")
     })
 }
 
-window.addEventListener('load', start)
-
+window.addEventListener('load', startAllProduct)

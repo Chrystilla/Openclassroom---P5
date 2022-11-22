@@ -39,7 +39,7 @@ fetch("http://localhost:3000/api/products/" + currentProductid)
         console.log(err)
         })
 
-/** Stock le panier dans le LocalStorage et le transforme en string (JSON.stringify) */
+/** Stock le panier dans le LocalStorage et le transforme en string (JSON.stringify) car le localstorage ne gère que des string */
 function saveCart (cart) {
     localStorage.setItem("cart", JSON.stringify(cart));
 }
