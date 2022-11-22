@@ -48,7 +48,7 @@ function displayProduct (product, article) {
             <div class="cart__item__content__description">
                 <h2>${article.name}</h2>
                 <p>${product.color}</p>
-                <p>${article.price}</p>
+                <p>${article.price} €</p>
             </div>
             <div class="cart__item__content__settings">
                 <div class="cart__item__content__settings__quantity">
@@ -64,7 +64,78 @@ function displayProduct (product, article) {
     return html
 }
 
+/** Application*/
 let cart = getCart()
-
 displayCart((cart))
 
+
+/**Telecharger le panier actuel, modifier les qtés ou supprimer un produit  - A REVOIR
+ * quantityValue est l'input quantité*/
+
+ function updateCart (DOMElt, quantityValue) {
+    // vérifier que la quantityValue a été passée dans le bon type
+    if (typeof quantityValue !== "number") {
+      quantityValue = parseInt(quantityValue)
+    }
+
+    // Target l'élément parent et retrieve l'id et la couleur dans ses attributs
+    let currentProduct = DOMElt.closest("article")
+    let currentProductId = currentProduct.getAttribute('data-id')
+    let currentProductColor = currentProduct.getAttribute('data-color')
+
+    // Trouver le produit actuel dans le panier, et s'il est trouvé, modifier ses quantités
+    let foundProductIndex = cart.findIndex(element => element.id == currentProductId && element.color == currentProductColor);
+    foundProductIndex.quantity = quantityValue
+  
+    // Supprimer le produit du panier et du DOM
+    if (foundProductIndex.quantity <= 0) {
+        cart.splice(cart.indexOf(foundProductIndex), 1)
+        currentProduct.remove()
+      }
+
+    getTotalQuantity()
+    getTotalPrice()
+  
+    // Enregistrer dans le localStorage
+    saveCart(cart)
+  }
+
+/** Calcul du nombre d'article dans le panier*/
+function getNumberProduct () {
+    let number = 0;
+    for (let product of cart) {
+        number += product.quantity
+    }
+    return number
+}
+document.querySelector('#totalQuantity').insertAdjacentHTML ('beforeend', getNumberProduct())
+
+/** Calcul du prix total du panier - A REVOIR*/
+const getTotalPrice = async () => {
+    let lastProductId
+    let article
+    let productPrice = 0
+  for (let product of cart) {
+
+    if (product.id !== lastProductId) {
+
+      lastProductId = product.id
+      article = await getArticle(product.id)
+    }
+    productPrice += product.quantity * article.price
+  }
+  return productPrice
+}
+document.querySelector('#totalPrice').insertAdjacentHTML ('beforeend', getTotalPrice())
+
+/** Mise en place des Listeners - A REVOIR*/
+const setListeners = async () => {
+    // Eventlistener on the quantity input
+    document.querySelectorAll('.itemQuantity').forEach(inputQty =>
+      inputQty.addEventListener('change', (e) => updateCart(inputQty, e.target.value))
+    )
+    // Eventlistener on the button "supprimer"
+    document.querySelectorAll('.deleteItem').forEach(buttonSuppr =>
+      buttonSuppr.addEventListener('click', () => (updateCart(buttonSuppr, 0)))
+    )
+  }
