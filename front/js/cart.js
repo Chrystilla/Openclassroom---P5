@@ -12,10 +12,9 @@ function getCart () {
         return JSON.parse(cart);
     }
 }
-console.log(getCart())
 
 /** Récupérer un article dans l'API en fonction de l'id du produit sélectionné */
-const getArticle = async (productId) => {
+async function getArticle (productId) {
     const r = await fetch("http://localhost:3000/api/products/" + productId)
     return await r.json()
 }
@@ -23,7 +22,7 @@ const getArticle = async (productId) => {
 /** Récupérer chaque produit du tableau, requêter l'API correspondant aux produits du tableau
   * Si l'id est le même, ne pas requêter de nouveau l'API
   * Ajouter la "string" html avec ces données */
-const displayCart = async (productsInCart) => {
+ async function displayCart (productsInCart) {
     let displayAllProduct =''
     let lastProductId
     let article
@@ -36,7 +35,41 @@ const displayCart = async (productsInCart) => {
     }
     /** ajout du code HTML dans le DOM */
     document.querySelector('#cart__items').insertAdjacentHTML ('beforeend', displayAllProduct)
+  
+    getTotalQuantity()
+    getTotalPrice()
 }
+
+/**Telecharger le panier actuel, modifier les qtés ou supprimer un produit
+ * (quantityValue est l'input quantité)- A REVOIR */
+
+ function updateCart (domElt, quantityValue) {
+  // vérifier que la quantityValue a été passée en type nombre
+  if (typeof quantityValue !== "number") {
+    quantityValue = parseInt(quantityValue)
+  }
+
+  // Target l'élément parent et retrieve l'id et la couleur de ses attributs
+  let currentElt = domElt.closest('article')
+  let currentEltId = currentElt.getAttribute('data-id')
+  let currentEltColor = currentElt.getAttribute('data-color')
+
+  // Trouver le produit actuel dans le panier, et s'il est trouvé, modifier ses quantités
+  let foundProduct = cart.find(product => product.id == currentEltId && product.color == currentEltColor)
+  foundProduct.quantity = quantityValue
+
+  // Supprimer le produit du panier et du DOM
+  if (foundProduct.quantity <= 0) {
+    cart.splice(cart.indexOf(foundProduct), 1)
+    currentElt.remove()
+  }
+  getTotalQuantity()
+  getTotalPrice()
+
+  // Enregistrer dans le localStorage
+  saveCart(cart)
+}
+
 /** Construction du html avec les infos de l'API correspondant à un produit*/
 function displayProduct (product, article) {
     let html = `
@@ -64,78 +97,46 @@ function displayProduct (product, article) {
     return html
 }
 
+/** Calcul du nombre d'article dans le panier*/
+function getTotalQuantity () {
+  let number = 0;
+  for (let product of cart) {
+      number += product.quantity
+  }
+  document.querySelector('#totalQuantity').textContent = number
+}
+
+/** Calcul du prix total du panier*/
+async function getTotalPrice () {
+  let lastProductId
+  let article
+  let productPrice = 0
+for (let product of cart) {
+  if (product.id !== lastProductId) {
+    lastProductId = product.id
+    article = await getArticle(product.id)
+  }
+
+  productPrice += product.quantity * article.price
+}
+document.querySelector('#totalPrice').textContent = productPrice
+}
+
+/** Mise en place des Listeners pour les quantity input et le boutton supprimer - A REVOIR*/
+async function setListeners () {
+  // Eventlistener sur les quantity input
+  document.querySelectorAll('.itemQuantity').forEach(inputQty =>
+    inputQty.addEventListener('change', (e) => updateCart(inputQty, e.target.value))
+  )
+  // Eventlistener sur le bouton "supprimer"
+  document.querySelectorAll('.deleteItem').forEach(buttonSuppr =>
+    buttonSuppr.addEventListener('click', () => (updateCart(buttonSuppr, 0)))
+  )
+}
+
 /** Application*/
 let cart = getCart()
-displayCart((cart))
+displayCart(cart)
+setListeners()
 
 
-/**Telecharger le panier actuel, modifier les qtés ou supprimer un produit  - A REVOIR
- * quantityValue est l'input quantité*/
-
- function updateCart (DOMElt, quantityValue) {
-    // vérifier que la quantityValue a été passée dans le bon type
-    if (typeof quantityValue !== "number") {
-      quantityValue = parseInt(quantityValue)
-    }
-
-    // Target l'élément parent et retrieve l'id et la couleur dans ses attributs
-    let currentProduct = DOMElt.closest("article")
-    let currentProductId = currentProduct.getAttribute('data-id')
-    let currentProductColor = currentProduct.getAttribute('data-color')
-
-    // Trouver le produit actuel dans le panier, et s'il est trouvé, modifier ses quantités
-    let foundProductIndex = cart.findIndex(element => element.id == currentProductId && element.color == currentProductColor);
-    foundProductIndex.quantity = quantityValue
-  
-    // Supprimer le produit du panier et du DOM
-    if (foundProductIndex.quantity <= 0) {
-        cart.splice(cart.indexOf(foundProductIndex), 1)
-        currentProduct.remove()
-      }
-
-    getTotalQuantity()
-    getTotalPrice()
-  
-    // Enregistrer dans le localStorage
-    saveCart(cart)
-  }
-
-/** Calcul du nombre d'article dans le panier*/
-function getNumberProduct () {
-    let number = 0;
-    for (let product of cart) {
-        number += product.quantity
-    }
-    return number
-}
-document.querySelector('#totalQuantity').insertAdjacentHTML ('beforeend', getNumberProduct())
-
-/** Calcul du prix total du panier - A REVOIR*/
-const getTotalPrice = async () => {
-    let lastProductId
-    let article
-    let productPrice = 0
-  for (let product of cart) {
-
-    if (product.id !== lastProductId) {
-
-      lastProductId = product.id
-      article = await getArticle(product.id)
-    }
-    productPrice += product.quantity * article.price
-  }
-  return productPrice
-}
-document.querySelector('#totalPrice').insertAdjacentHTML ('beforeend', getTotalPrice())
-
-/** Mise en place des Listeners - A REVOIR*/
-const setListeners = async () => {
-    // Eventlistener on the quantity input
-    document.querySelectorAll('.itemQuantity').forEach(inputQty =>
-      inputQty.addEventListener('change', (e) => updateCart(inputQty, e.target.value))
-    )
-    // Eventlistener on the button "supprimer"
-    document.querySelectorAll('.deleteItem').forEach(buttonSuppr =>
-      buttonSuppr.addEventListener('click', () => (updateCart(buttonSuppr, 0)))
-    )
-  }
