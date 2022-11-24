@@ -50,7 +50,7 @@ async function getArticle (productId) {
   }
 
   // Target l'élément parent et retrieve l'id et la couleur de ses attributs
-  let currentElt = domElt.closest('article')
+  let currentElt = domElt.closest("article")
   let currentEltId = currentElt.getAttribute('data-id')
   let currentEltColor = currentElt.getAttribute('data-color')
 
@@ -126,17 +126,22 @@ document.querySelector('#totalPrice').textContent = productPrice
 async function setListeners () {
   // Eventlistener sur les quantity input
   document.querySelectorAll('.itemQuantity').forEach(inputQty =>
-    inputQty.addEventListener('change', (e) => updateCart(inputQty, e.target.value))
+    inputQty.addEventListener('change', function (e) {
+      updateCart(inputQty, e.target.value)})
   )
   // Eventlistener sur le bouton "supprimer"
   document.querySelectorAll('.deleteItem').forEach(buttonSuppr =>
-    buttonSuppr.addEventListener('click', () => (updateCart(buttonSuppr, 0)))
+    buttonSuppr.addEventListener('click', function () {
+      updateCart(buttonSuppr, 0)})
   )
 }
 
 /** Application*/
 let cart = getCart()
-displayCart(cart)
-setListeners()
+async function application() {
+await displayCart(cart)
+await setListeners()
+}
 
+application()
 
