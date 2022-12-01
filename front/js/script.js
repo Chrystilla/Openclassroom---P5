@@ -1,41 +1,31 @@
-/**
- * 1. Récupérer les articles
- * 2. Construire l'HTML
- * 3. Injecter l'HTML dans le DOM
- *      3.1 Pointer sur l'élément items
- *      3.2 Injecter dans le DOM
- */
 
+//Requête de l'API pour récupérer tous les articles
 function startAllProduct () {
-fetch("http://localhost:3000/api/products")
-    .then(function (res) {
-        if (res.ok) {
-            return res.json()
-        }
-    })
+    fetch("http://localhost:3000/api/products")
+        .then((res) => res.json())
 
-    .then(function(data) {
-        
-        let display = ''
-        for(let article of data){
+// Construction du HTML
+        .then((data) => {
+            
+            let display = ''
+            for(let article of data){
 
-            display += `
-                <a href="./product.html?id=${article._id}">
-                    <article>
-                    <img src="${article.imageUrl}" alt="${article.altTxt}">
-                    <h3 class="productName">${article.name}</h3>
-                    <p class="productDescription">${article.description}</p>
-                    </article>
-            </a>
-        `    
-        }
-        console.log(display)
+                display += `
+                    <a href="./product.html?id=${article._id}">
+                        <article>
+                            <img src="${article.imageUrl}" alt="${article.altTxt}">
+                            <h3 class="productName">${article.name}</h3>
+                            <p class="productDescription">${article.description}</p>
+                        </article>
+                    </a>
+                    `    
+            }
+// Injection du HTML dans le DOM : Pointer puis injecter
         document.querySelector('#items').insertAdjacentHTML ('beforeend', display)
     })
 
-    .catch(function(err) {
-    console.log(err)
-    })
+    .catch((err) => console.log('Impossible de contacter le serveur'))
 }
 
+// Lancement de la fonction au chargement de la page
 window.addEventListener('load', startAllProduct)

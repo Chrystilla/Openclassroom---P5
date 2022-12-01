@@ -1,9 +1,9 @@
-/** Stock le panier dans le LocalStorage*/
+// Stock le panier dans le LocalStorage et le transforme en string (JSON.stringify) car le localstorage ne gère que des string
 function saveCart (cart) {
     localStorage.setItem("cart", JSON.stringify(cart));
 }
 
-/** Récupère le panier sauvegardé dans le localStorage*/
+// Récupère le panier sauvegardé dans le localStorage et le transforme en objet (JSON.Parse)
 function getCart () {
     let cart = localStorage.getItem("cart")
     if (cart === null) {
@@ -13,15 +13,17 @@ function getCart () {
     }
 }
 
-/** Récupérer un article dans l'API en fonction de l'id du produit sélectionné */
+// Récupérer un article dans l'API en fonction de l'id du produit sélectionné
 async function getArticle (productId) {
-    const r = await fetch("http://localhost:3000/api/products/" + productId)
-    return await r.json()
+    const res = await fetch("http://localhost:3000/api/products/" + productId)
+    if (res.ok) {
+    return await res.json()
+    }
+    throw new Error ('Impossible de contacter le serveur')
 }
 
 /** Récupérer chaque produit du tableau, requêter l'API correspondant aux produits du tableau
-  * Si l'id est le même, ne pas requêter de nouveau l'API
-  * Ajouter la "string" html avec ces données */
+  * Si l'id est le même, ne pas requêter de nouveau l'API et rajouter les qtés au produit deja existant*/
  async function displayCart (productsInCart) {
     let displayAllProduct =''
     let lastProductId
@@ -31,9 +33,9 @@ async function getArticle (productId) {
             lastProductId = product.id
             article = await getArticle(product.id) 
         }
-    displayAllProduct += displayProduct(product, article)
+        displayAllProduct += displayProduct(product, article)
     }
-    /** ajout du code HTML dans le DOM */
+// Injection du produit dans le DOM
     document.querySelector('#cart__items').insertAdjacentHTML ('beforeend', displayAllProduct)
   
     getTotalQuantity()
@@ -44,23 +46,26 @@ async function getArticle (productId) {
  * (quantityValue est l'input quantité)- A REVOIR */
 
  function updateCart (domElt, quantityValue) {
-  // vérifier que la quantityValue a été passée en type nombre
+// vérifier que la quantityValue a été passée en type nombre
   if (typeof quantityValue !== "number") {
     quantityValue = parseInt(quantityValue)
   }
 
-  // Target l'élément parent et retrieve l'id et la couleur de ses attributs
+// Target l'élément parent et retrieve l'id et la couleur de ses attributs
   let currentElt = domElt.closest("article")
   let currentEltId = currentElt.getAttribute('data-id')
   let currentEltColor = currentElt.getAttribute('data-color')
 
-  // Trouver le produit actuel dans le panier, et s'il est trouvé, modifier ses quantités
-  let foundProduct = cart.find(product => product.id == currentEltId && product.color == currentEltColor)
+ /**Recherche du produit actuel dans le panier
+ * find permet de chercher un élément dans un tableau par rapport à une condition*/
+  let foundProduct = cart.find((product) => product.id == currentEltId && product.color == currentEltColor)
+
+  // Si le est trouvé : modifier ses quantités 
   foundProduct.quantity = quantityValue
 
   // Supprimer le produit du panier et du DOM
   if (foundProduct.quantity <= 0) {
-    cart.splice(cart.indexOf(foundProduct), 1)
+    cart.splice(cart.indexOf(foundProduct), 1) // Indexof cherche l'Index d'un produit
     currentElt.remove()
   }
   getTotalQuantity()
@@ -123,16 +128,18 @@ document.querySelector('#totalPrice').textContent = productPrice
 }
 
 /** Mise en place des Listeners pour les quantity input et le boutton supprimer - A REVOIR*/
-async function setListeners () {
+function setListeners () {
   // Eventlistener sur les quantity input
-  document.querySelectorAll('.itemQuantity').forEach(inputQty =>
-    inputQty.addEventListener('change', function (e) {
-      updateCart(inputQty, e.target.value)})
+  document.querySelectorAll('.itemQuantity')
+          .forEach(function (inputQty) {
+            inputQty.addEventListener('change', function (e) {
+                updateCart(inputQty, e.target.value)})}
   )
   // Eventlistener sur le bouton "supprimer"
-  document.querySelectorAll('.deleteItem').forEach(buttonSuppr =>
-    buttonSuppr.addEventListener('click', function () {
-      updateCart(buttonSuppr, 0)})
+  document.querySelectorAll('.deleteItem')
+          .forEach(function (buttonSuppr) {
+            buttonSuppr.addEventListener('click', function () {
+              updateCart(buttonSuppr, 0)})}
   )
 }
 
