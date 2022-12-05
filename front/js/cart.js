@@ -43,8 +43,7 @@ async function getArticle (productId) {
 }
 
 /**Telecharger le panier actuel, modifier les qtés ou supprimer un produit
- * (quantityValue est l'input quantité)- A REVOIR */
-
+ * (quantityValue est l'input quantité)*/
  function updateCart (domElt, quantityValue) {
 // vérifier que la quantityValue a été passée en type nombre
   if (typeof quantityValue !== "number") {
@@ -60,12 +59,14 @@ async function getArticle (productId) {
  * find permet de chercher un élément dans un tableau par rapport à une condition*/
   let foundProduct = cart.find((product) => product.id == currentEltId && product.color == currentEltColor)
 
-  // Si le est trouvé : modifier ses quantités 
+// Si le est trouvé : modifier ses quantités 
   foundProduct.quantity = quantityValue
 
-  // Supprimer le produit du panier et du DOM
+// Supprimer le produit du panier et du DOM si les quantités sont <=0
   if (foundProduct.quantity <= 0) {
-    cart.splice(cart.indexOf(foundProduct), 1) // Indexof cherche l'Index d'un produit
+// Indexof cherche l'Index d'un produit
+    cart.splice(cart.indexOf(foundProduct), 1) 
+//La méthode Element.remove() retire l'élément courant du DOM
     currentElt.remove()
   }
   getTotalQuantity()
@@ -127,7 +128,7 @@ for (let product of cart) {
 document.querySelector('#totalPrice').textContent = productPrice
 }
 
-/** Mise en place des Listeners pour les quantity input et le boutton supprimer - A REVOIR*/
+// Mise en place des Listeners pour les quantity input et le boutton supprimer
 function setListeners () {
   // Eventlistener sur les quantity input
   document.querySelectorAll('.itemQuantity')
@@ -135,7 +136,7 @@ function setListeners () {
             inputQty.addEventListener('change', function (e) {
                 updateCart(inputQty, e.target.value)})}
   )
-  // Eventlistener sur le bouton "supprimer"
+  // Eventlistener sur le bouton "supprimer" (passe une quantité à 0 sur la fonction updateCart pour faire jouer la fonction de suppression)
   document.querySelectorAll('.deleteItem')
           .forEach(function (buttonSuppr) {
             buttonSuppr.addEventListener('click', function () {
@@ -151,4 +152,111 @@ await setListeners()
 }
 
 application()
+
+// Formulaire
+
+const firstName = document.querySelector('#firstName')
+const lastName = document.querySelector('#lastName')
+const address = document.querySelector('#address')
+const city = document.querySelector('#city')
+const email = document.querySelector('#email')
+const order = document.querySelector('#order')
+
+const firstNameErrorMsg = document.querySelector('#firstNameErrorMsg')
+const lastNameErrorMsg = document.querySelector('#lastNameErrorMsg')
+const addressErrorMsg = document.querySelector('#addressErrorMsg')
+const cityErrorMsg = document.querySelector('#cityErrorMsg')
+const emailErrorMsg = document.querySelector('#emailErrorMsg')
+
+//Def des Regex
+const regexName = /^[a-zA-ZàèìòùÀÈÌÒÙáéíóúýÁÉÍÓÚÝâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÿÄËÏÖÜŸçÇßØøÅåÆæœ\s\,\'\-]*$/i;
+const regexAddress = /^[a-zA-Z0-9àèìòùÀÈÌÒÙáéíóúýÁÉÍÓÚÝâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÿÄËÏÖÜŸçÇßØøÅåÆæœ\s\,\'\-]*$/i;
+const regexEmail = /^[0-9a-z._-]+@{1}[0-9a-z.-]{2,}[.]{1}[a-z]{2,4}$/i;
+
+//Mise à l'écoute des différents champs du formulaire et soumission au regex
+
+firstName.addEventListener('change', function () {
+  if (regexName.test(firstName.value) == false) {
+    firstNameErrorMsg.textContent = ('Veuillez entrer un prénom sans chiffre ni caractères spéciaux')
+  } else {
+    firstNameErrorMsg.innerHTML = null;
+  } 
+})
+
+lastName.addEventListener('change', function () {
+  if (regexName.test(lastName.value) == false) {
+    lastNameErrorMsg.textContent = ('Veuillez entrer un nom sans chiffre ni caractères spéciaux')
+  } else {
+    lastNameErrorMsg.innerHTML = null;
+  }
+})
+
+address.addEventListener('change', function () {
+  if (regexAddress.test(address.value) == false) {
+    addressErrorMsg.textContent = ('Veuillez entrer une adresse sans caractères spéciaux.')
+  } else {
+    addressErrorMsg.innerHTML = null;
+  }
+})
+
+city.addEventListener('change', function () {
+  if (regexAddress.test(city.value) == false) {
+    cityErrorMsg.textContent = ('Veuillez entrer une ville sans caractères spéciaux.')
+  } else {
+    cityErrorMsg.innerHTML = null;
+  }
+})
+
+email.addEventListener('change', function () {
+  if (regexEmail.test(email.value) == false) {
+    emailErrorMsg.textContent = ('Veuillez entrer une adress email valide.')
+  } else {
+    emailErrorMsg.innerHTML = null;
+  }
+})
+
+//Construction de l'objet de contact et du tableau de produit et post
+const contact = {
+  firstName : firstName.value,
+  lastName : lastName.value,
+  address : address.value,
+  city : city.value,
+  email : email.value,
+}
+
+function setDataJson() {
+  
+  let dataJSON = JSON.stringify({contact})
+  return dataJSON
+}
+
+//Envoi des data du formulaire dans l'API par la method POST
+function postForm () {
+  fetch ("http://localhost:3000/api/products/order", {
+      method : 'POST',
+      body : dataJSON,
+      headers : {
+          'accept' : 'application/json',
+          'content-type' : 'application/json',
+      }
+  })
+  .then((res) => res.json())
+  .then((data) => {
+        window.location.href = "./confirmation.html?id=" + data.orderId
+        console.log(data)
+  })
+}
+
+order.addEventListener('click', function (e) {
+  e.preventDefault();
+  let dataJSON = setDataJson()
+  postForm()
+})
+
+
+
+
+
+
+
 
