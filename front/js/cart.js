@@ -146,6 +146,7 @@ function setListeners () {
 
 /** Application*/
 let cart = getCart()
+console.log(cart)
 async function application() {
 await displayCart(cart)
 await setListeners()
@@ -168,7 +169,13 @@ const addressErrorMsg = document.querySelector('#addressErrorMsg')
 const cityErrorMsg = document.querySelector('#cityErrorMsg')
 const emailErrorMsg = document.querySelector('#emailErrorMsg')
 
-//Def des Regex
+//Def des Regex :
+// Regular expression :
+// a-z lowercase, A-Z uppercase , all spécial language accent
+// \s => allow space
+//\,  \'  \- allow comma, simple quote and dash
+// /^[...]*$/ match all between the brackets many times
+// /i tets if don't match the regular expression
 const regexName = /^[a-zA-ZàèìòùÀÈÌÒÙáéíóúýÁÉÍÓÚÝâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÿÄËÏÖÜŸçÇßØøÅåÆæœ\s\,\'\-]*$/i;
 const regexAddress = /^[a-zA-Z0-9àèìòùÀÈÌÒÙáéíóúýÁÉÍÓÚÝâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÿÄËÏÖÜŸçÇßØøÅåÆæœ\s\,\'\-]*$/i;
 const regexEmail = /^[0-9a-z._-]+@{1}[0-9a-z.-]{2,}[.]{1}[a-z]{2,4}$/i;
@@ -215,43 +222,48 @@ email.addEventListener('change', function () {
   }
 })
 
-//Construction de l'objet de contact et du tableau de produit et post
-const contact = {
-  firstName : firstName.value,
-  lastName : lastName.value,
-  address : address.value,
-  city : city.value,
-  email : email.value,
-}
-
-function setDataJson() {
-  
-  let dataJSON = JSON.stringify({contact})
+//Construction de l'objet de contact et du tableau de produit
+function setDataJson () {
+  const contact = {
+      firstName : firstName.value,
+      lastName : lastName.value,
+      address : address.value,
+      city : city.value,
+      email : email.value,
+    }
+  let products = []
+    for (let cartProduct of cart) {
+      if (products.find((product) => product.id == cartProduct.id)) {
+        console.log("Id already exist");
+      } else {
+        products.push(cartProduct.id)
+      }
+    }
+  let dataJSON = JSON.stringify({contact, products})
+  console.log(dataJSON)
   return dataJSON
-}
+  }
 
 //Envoi des data du formulaire dans l'API par la method POST
 function postForm () {
   fetch ("http://localhost:3000/api/products/order", {
       method : 'POST',
-      body : dataJSON,
+      body : setDataJson(),
       headers : {
           'accept' : 'application/json',
           'content-type' : 'application/json',
       }
   })
   .then((res) => res.json())
-  .then((data) => {
-        window.location.href = "./confirmation.html?id=" + data.orderId
-        console.log(data)
-  })
+  .then((body) => console.log(body))
 }
-
+// à remplacer par windows.location...
+//Ecoute du bouton order et objet contact et tableau produit généré
 order.addEventListener('click', function (e) {
   e.preventDefault();
-  let dataJSON = setDataJson()
-  postForm()
+  postForm ()
 })
+
 
 
 
