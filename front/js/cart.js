@@ -222,43 +222,48 @@ email.addEventListener('change', function () {
   }
 })
 
-//Construction de l'objet de contact et du tableau de produit
-function setDataJson () {
-  const contact = {
-      firstName : firstName.value,
-      lastName : lastName.value,
-      address : address.value,
-      city : city.value,
-      email : email.value,
-    }
-  let products = []
-    for (let cartProduct of cart) {
-      if (products.find((product) => product.id == cartProduct.id)) {
-        console.log("Id already exist");
-      } else {
-        products.push(cartProduct.id)
+//Construction de l'objet Contact et du tableau d'ID produits
+function setContactAndProduct () {
+  const arrayProduct = []
+      for (let cartProduct of cart) {
+        if (arrayProduct.find((id) => id == cartProduct.id)) {
+        } else {
+          arrayProduct.push(cartProduct.id)
+        }
       }
-    }
-  let dataJSON = JSON.stringify({contact, products})
-  console.log(dataJSON)
-  return dataJSON
+  const ContactAndProduct = {
+    contact : {
+        firstName : firstName.value,
+        lastName : lastName.value,
+        address : address.value,
+        city : city.value,
+        email : email.value,
+      },
+    products : arrayProduct
   }
+  return ContactAndProduct
+}
 
-//Envoi des data du formulaire dans l'API par la method POST
+//Création de la fonction de POST des data Contacts et produits dans l'API
 function postForm () {
   fetch ("http://localhost:3000/api/products/order", {
       method : 'POST',
-      body : setDataJson(),
+      body : JSON.stringify(setContactAndProduct ()),
       headers : {
           'accept' : 'application/json',
           'content-type' : 'application/json',
       }
   })
   .then((res) => res.json())
-  .then((body) => console.log(body))
+  .then((body) => {
+    window.location.href = "./confirmation.html?id=" + body.orderId
+    console.log(body)
+    localStorage.clear()
+  })
+  .catch((err) => console.log('erreur:' + err))
 }
-// à remplacer par windows.location...
-//Ecoute du bouton order et objet contact et tableau produit généré
+
+//Ecoute du bouton order et appel de la fonction POST
 order.addEventListener('click', function (e) {
   e.preventDefault();
   postForm ()

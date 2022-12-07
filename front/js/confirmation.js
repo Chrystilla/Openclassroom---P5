@@ -3,8 +3,8 @@ const url_id = document.location.search;
 
 // Extraction de l'id
 const url = new URLSearchParams(url_id);
-const id = url.get("id")
+const orderId = url.get("id")
 
-document.querySelector("#orderId").innerHTML = id;
+document.querySelector("#orderId").innerHTML = orderId;
 
 
