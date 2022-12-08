@@ -5,15 +5,14 @@ const url_id = window.location.search;
 const url = new URLSearchParams(url_id);
 const currentProductid = url.get("id")
 
-// Requête de l'API pour récupérer le produit de l'id sur lequel l'utilisateur a cliqué
+// Requête de l'API pour récupérer la fiche produit sur laquel l'utilisateur a cliqué
 fetch("http://localhost:3000/api/products/" + currentProductid)
     .then((res) => res.json())
-    
 
 // Injection du produit dans le DOM
     .then((article) => {
         const productImg = document.querySelector('.item__img');
-        productImg.innerHTML = `<img src="${article.imageUrl}" alt="${article.altTxt}">`
+        productImg.insertAdjacentHTML ('beforeend', `<img src="${article.imageUrl}" alt="${article.altTxt}">`) 
 
         const productName = document.querySelector('#title');
         productName.textContent = article.name;
@@ -70,14 +69,14 @@ function addToCart () {
             foundProduct.quantity += currentProductQty;
 
 // sinon crée l'objet et l'envoie dans le localStorage
-            } else {
+        } else {
                 let newArticle ={
                     id: currentProductid,
                     color: currentProductColor,
                     quantity: currentProductQty
                 }
                 cart.push(newArticle);
-            }
+        }
         saveCart(cart)
         alert(`${currentProductQty} ${currentProductName} de couleur ${currentProductColor} a bien été ajouté au panier !`)
     }

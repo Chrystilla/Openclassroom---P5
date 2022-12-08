@@ -13,146 +13,105 @@ function getCart () {
     }
 }
 
-// Récupérer un article dans l'API en fonction de l'id du produit sélectionné
-async function getArticle (productId) {
-    const res = await fetch("http://localhost:3000/api/products/" + productId)
-    if (res.ok) {
-    return await res.json()
-    }
-    throw new Error ('Impossible de contacter le serveur')
+let cart = getCart()
+const cartItem = document.querySelector('#cart__items')
+
+if (cart.length == 0) {
+  cartItem.insertAdjacentHTML ('beforeend', `Votre panier est vide`)
 }
 
-/** Récupérer chaque produit du tableau, requêter l'API correspondant aux produits du tableau
-  * Si l'id est le même, ne pas requêter de nouveau l'API et rajouter les qtés au produit deja existant*/
- async function displayCart (productsInCart) {
-    let displayAllProduct =''
-    let lastProductId
-    let article
-    for (let product of productsInCart) {
-        if (product.id !== lastProductId) {
-            lastProductId = product.id
-            article = await getArticle(product.id) 
-        }
-        displayAllProduct += displayProduct(product, article)
+fetch("http://localhost:3000/api/products/")
+  .then((res) => res.json())
+
+  .then((API) => {
+    
+    let totalQuantity = 0
+    let totalPrice = 0
+
+    for (let product of cart) {
+
+      for (let article of API) {
+        
+        if (product.id === article._id) {
+          cartItem.insertAdjacentHTML ('beforeend',
+              `<article class="cart__item" data-id="${product.id}" data-color="${product.color}">
+              <div class="cart__item__img">
+              <img src="${article.imageUrl}" alt="${article.altTxt}">
+              </div>
+              <div class="cart__item__content">
+              <div class="cart__item__content__description">
+                  <h2>${article.name}</h2>
+                  <p>${product.color}</p>
+                  <p>${article.price} €</p>
+              </div>
+              <div class="cart__item__content__settings">
+                  <div class="cart__item__content__settings__quantity">
+                  <p>Qté : </p>
+                  <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${product.quantity}">
+                  </div>
+                  <div class="cart__item__content__settings__delete">
+                  <p class="deleteItem">Supprimer</p>
+                  </div>
+              </div>
+              </div>
+          </article>`)
+
+          totalQuantity +=product.quantity
+          document.querySelector('#totalQuantity').textContent = totalQuantity
+
+          totalPrice +=article.price * product.quantity
+          document.querySelector('#totalPrice').textContent = totalPrice
+        } 
+      }
+
     }
-// Injection du produit dans le DOM
-    document.querySelector('#cart__items').insertAdjacentHTML ('beforeend', displayAllProduct)
+    // Ecoute des changements de quantités
+    document.querySelectorAll('.itemQuantity')
+    .forEach(function (inputQty) {
+      inputQty.addEventListener('change', function (e) {
+        updateCart(inputQty, e.target.value)})}
+    )
+    // Ecoute du bouton "supprimer" (passe une quantité à 0 sur la fonction updateCart pour faire jouer la fonction de suppression)
+    document.querySelectorAll('.deleteItem')
+    .forEach(function (buttonSuppr) {
+      buttonSuppr.addEventListener('click', function () {
+        updateCart(buttonSuppr, 0)})}
+    ) 
+  })
   
-    getTotalQuantity()
-    getTotalPrice()
-}
+  .catch((err) => console.log('Impossible de contacter le serveur'))
 
-/**Telecharger le panier actuel, modifier les qtés ou supprimer un produit
- * (quantityValue est l'input quantité)*/
- function updateCart (domElt, quantityValue) {
-// vérifier que la quantityValue a été passée en type nombre
+
+//Fonction de modification/Suppression d'un produit(quantityValue est l'input quantité)
+function updateCart (domElt, quantityValue) {
+  // vérifier que la quantityValue a été passée en type nombre
   if (typeof quantityValue !== "number") {
     quantityValue = parseInt(quantityValue)
   }
 
-// Target l'élément parent et retrieve l'id et la couleur de ses attributs
+  // Target l'élément parent et retrieve l'id et la couleur de ses attributs
   let currentElt = domElt.closest("article")
   let currentEltId = currentElt.getAttribute('data-id')
   let currentEltColor = currentElt.getAttribute('data-color')
 
- /**Recherche du produit actuel dans le panier
- * find permet de chercher un élément dans un tableau par rapport à une condition*/
-  let foundProduct = cart.find((product) => product.id == currentEltId && product.color == currentEltColor)
-
-// Si le est trouvé : modifier ses quantités 
-  foundProduct.quantity = quantityValue
-
-// Supprimer le produit du panier et du DOM si les quantités sont <=0
-  if (foundProduct.quantity <= 0) {
-// Indexof cherche l'Index d'un produit
-    cart.splice(cart.indexOf(foundProduct), 1) 
-//La méthode Element.remove() retire l'élément courant du DOM
-    currentElt.remove()
-  }
-  getTotalQuantity()
-  getTotalPrice()
-
+  //Recherche du produit actuel dans le panier
+  for (let product of cart) {
+    if (product.id == currentEltId && product.color == currentEltColor) {
+      // Si le produit est trouvé : modifier ses quantités 
+      product.quantity = quantityValue
+    }
+    // Si les quantités sont à 0 : Supprimer le produit du panier et du DOM
+    if (product.quantity <=0) {
+      // Indexof cherche l'Index d'un produit
+      cart.splice(cart.indexOf(product), 1)
+      //La méthode Element.remove() retire l'élément courant du DOM
+      currentElt.remove()
+    }
+  }    
   // Enregistrer dans le localStorage
   saveCart(cart)
+  window.location.reload()
 }
-
-/** Construction du html avec les infos de l'API correspondant à un produit*/
-function displayProduct (product, article) {
-    let html = `
-        <article class="cart__item" data-id="${product.id}" data-color="${product.color}">
-            <div class="cart__item__img">
-            <img src="${article.imageUrl}" alt="${article.altTxt}">
-            </div>
-            <div class="cart__item__content">
-            <div class="cart__item__content__description">
-                <h2>${article.name}</h2>
-                <p>${product.color}</p>
-                <p>${article.price} €</p>
-            </div>
-            <div class="cart__item__content__settings">
-                <div class="cart__item__content__settings__quantity">
-                <p>Qté : </p>
-                <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${product.quantity}">
-                </div>
-                <div class="cart__item__content__settings__delete">
-                <p class="deleteItem">Supprimer</p>
-                </div>
-            </div>
-            </div>
-        </article>`
-    return html
-}
-
-/** Calcul du nombre d'article dans le panier*/
-function getTotalQuantity () {
-  let number = 0;
-  for (let product of cart) {
-      number += product.quantity
-  }
-  document.querySelector('#totalQuantity').textContent = number
-}
-
-/** Calcul du prix total du panier*/
-async function getTotalPrice () {
-  let lastProductId
-  let article
-  let productPrice = 0
-for (let product of cart) {
-  if (product.id !== lastProductId) {
-    lastProductId = product.id
-    article = await getArticle(product.id)
-  }
-
-  productPrice += product.quantity * article.price
-}
-document.querySelector('#totalPrice').textContent = productPrice
-}
-
-// Mise en place des Listeners pour les quantity input et le boutton supprimer
-function setListeners () {
-  // Eventlistener sur les quantity input
-  document.querySelectorAll('.itemQuantity')
-          .forEach(function (inputQty) {
-            inputQty.addEventListener('change', function (e) {
-                updateCart(inputQty, e.target.value)})}
-  )
-  // Eventlistener sur le bouton "supprimer" (passe une quantité à 0 sur la fonction updateCart pour faire jouer la fonction de suppression)
-  document.querySelectorAll('.deleteItem')
-          .forEach(function (buttonSuppr) {
-            buttonSuppr.addEventListener('click', function () {
-              updateCart(buttonSuppr, 0)})}
-  )
-}
-
-/** Application*/
-let cart = getCart()
-console.log(cart)
-async function application() {
-await displayCart(cart)
-await setListeners()
-}
-
-application()
 
 // Formulaire
 
@@ -186,7 +145,7 @@ firstName.addEventListener('change', function () {
   if (regexName.test(firstName.value) == false) {
     firstNameErrorMsg.textContent = ('Veuillez entrer un prénom sans chiffre ni caractères spéciaux')
   } else {
-    firstNameErrorMsg.innerHTML = null;
+    firstNameErrorMsg.insertAdjacentHTML ('beforeend', '')
   } 
 })
 
@@ -194,7 +153,7 @@ lastName.addEventListener('change', function () {
   if (regexName.test(lastName.value) == false) {
     lastNameErrorMsg.textContent = ('Veuillez entrer un nom sans chiffre ni caractères spéciaux')
   } else {
-    lastNameErrorMsg.innerHTML = null;
+    lastNameErrorMsg.insertAdjacentHTML ('beforeend', '')
   }
 })
 
@@ -202,7 +161,7 @@ address.addEventListener('change', function () {
   if (regexAddress.test(address.value) == false) {
     addressErrorMsg.textContent = ('Veuillez entrer une adresse sans caractères spéciaux.')
   } else {
-    addressErrorMsg.innerHTML = null;
+    addressErrorMsg.insertAdjacentHTML ('beforeend', '')
   }
 })
 
@@ -210,7 +169,7 @@ city.addEventListener('change', function () {
   if (regexAddress.test(city.value) == false) {
     cityErrorMsg.textContent = ('Veuillez entrer une ville sans caractères spéciaux.')
   } else {
-    cityErrorMsg.innerHTML = null;
+    cityErrorMsg.insertAdjacentHTML ('beforeend', '')
   }
 })
 
@@ -218,7 +177,7 @@ email.addEventListener('change', function () {
   if (regexEmail.test(email.value) == false) {
     emailErrorMsg.textContent = ('Veuillez entrer une adress email valide.')
   } else {
-    emailErrorMsg.innerHTML = null;
+    emailErrorMsg.insertAdjacentHTML ('beforeend', '')
   }
 })
 
