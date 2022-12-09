@@ -20,6 +20,7 @@ if (cart.length == 0) {
   cartItem.insertAdjacentHTML ('beforeend', `Votre panier est vide`)
 }
 
+// Requête de l'API pour récupérer tous les articles
 fetch("http://localhost:3000/api/products/")
   .then((res) => res.json())
 
@@ -28,6 +29,7 @@ fetch("http://localhost:3000/api/products/")
     let totalQuantity = 0
     let totalPrice = 0
 
+    // Construction et insertion du HTML pour chaque produit du panier
     for (let product of cart) {
 
       for (let article of API) {
@@ -56,6 +58,7 @@ fetch("http://localhost:3000/api/products/")
               </div>
           </article>`)
 
+          // Calcul et insertion des quantités et du prix total
           totalQuantity +=product.quantity
           document.querySelector('#totalQuantity').textContent = totalQuantity
 
@@ -65,13 +68,14 @@ fetch("http://localhost:3000/api/products/")
       }
 
     }
+
     // Ecoute des changements de quantités
     document.querySelectorAll('.itemQuantity')
     .forEach(function (inputQty) {
       inputQty.addEventListener('change', function (e) {
         updateCart(inputQty, e.target.value)})}
     )
-    // Ecoute du bouton "supprimer" (passe une quantité à 0 sur la fonction updateCart pour faire jouer la fonction de suppression)
+    // Ecoute du bouton "supprimer"
     document.querySelectorAll('.deleteItem')
     .forEach(function (buttonSuppr) {
       buttonSuppr.addEventListener('click', function () {
@@ -82,39 +86,37 @@ fetch("http://localhost:3000/api/products/")
   .catch((err) => console.log('Impossible de contacter le serveur'))
 
 
-//Fonction de modification/Suppression d'un produit(quantityValue est l'input quantité)
-function updateCart (domElt, quantityValue) {
-  // vérifier que la quantityValue a été passée en type nombre
+//Fonction de modification/Suppression d'un produit
+function updateCart (domElement, quantityValue) {
+
+  // Vérification que la quantityValue a été passée en type nombre
   if (typeof quantityValue !== "number") {
     quantityValue = parseInt(quantityValue)
   }
 
-  // Target l'élément parent et retrieve l'id et la couleur de ses attributs
-  let currentElt = domElt.closest("article")
-  let currentEltId = currentElt.getAttribute('data-id')
-  let currentEltColor = currentElt.getAttribute('data-color')
+  // Target le produit correspondant aux boutons et retrieve l'id et la couleur de ses attributs
+  let currentProduct = domElement.closest("article")
+  let currentProductId = currentElt.getAttribute('data-id')
+  let currentproductColor = currentElt.getAttribute('data-color')
 
   //Recherche du produit actuel dans le panier
   for (let product of cart) {
-    if (product.id == currentEltId && product.color == currentEltColor) {
+    if (product.id == currentProductId && product.color == currentproductColor) {
       // Si le produit est trouvé : modifier ses quantités 
       product.quantity = quantityValue
     }
     // Si les quantités sont à 0 : Supprimer le produit du panier et du DOM
     if (product.quantity <=0) {
-      // Indexof cherche l'Index d'un produit
-      cart.splice(cart.indexOf(product), 1)
-      //La méthode Element.remove() retire l'élément courant du DOM
-      currentElt.remove()
+      cart.splice(cart.indexOf(product), 1) // Indexof cherche l'Index d'un produit
+      currentElt.remove() // La méthode Element.remove() retire l'élément courant du DOM
     }
   }    
-  // Enregistrer dans le localStorage
+  // Enregistrer dans le localStorage et recharger la page
   saveCart(cart)
   window.location.reload()
 }
 
-// Formulaire
-
+// Target des champs du formulaire
 const firstName = document.querySelector('#firstName')
 const lastName = document.querySelector('#lastName')
 const address = document.querySelector('#address')
@@ -128,66 +130,56 @@ const addressErrorMsg = document.querySelector('#addressErrorMsg')
 const cityErrorMsg = document.querySelector('#cityErrorMsg')
 const emailErrorMsg = document.querySelector('#emailErrorMsg')
 
-//Def des Regex :
+// Def des Regex :
 // Regular expression :
 // a-z lowercase, A-Z uppercase , all spécial language accent
 // \s => allow space
-//\,  \'  \- allow comma, simple quote and dash
+// \,  \'  \- allow comma, simple quote and dash
 // /^[...]*$/ match all between the brackets many times
 // /i tets if don't match the regular expression
 const regexName = /^[a-zA-ZàèìòùÀÈÌÒÙáéíóúýÁÉÍÓÚÝâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÿÄËÏÖÜŸçÇßØøÅåÆæœ\s\,\'\-]*$/i;
 const regexAddress = /^[a-zA-Z0-9àèìòùÀÈÌÒÙáéíóúýÁÉÍÓÚÝâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÿÄËÏÖÜŸçÇßØøÅåÆæœ\s\,\'\-]*$/i;
 const regexEmail = /^[0-9a-z._-]+@{1}[0-9a-z.-]{2,}[.]{1}[a-z]{2,4}$/i;
 
-//Mise à l'écoute des différents champs du formulaire et soumission au regex
-
+// Ecoute des différents champs du formulaire et soumission aux Regex
 firstName.addEventListener('change', function () {
   if (regexName.test(firstName.value) == false) {
     firstNameErrorMsg.textContent = ('Veuillez entrer un prénom sans chiffre ni caractères spéciaux')
   } else {
-    firstNameErrorMsg.insertAdjacentHTML ('beforeend', '')
   } 
 })
 
 lastName.addEventListener('change', function () {
   if (regexName.test(lastName.value) == false) {
     lastNameErrorMsg.textContent = ('Veuillez entrer un nom sans chiffre ni caractères spéciaux')
-  } else {
-    lastNameErrorMsg.insertAdjacentHTML ('beforeend', '')
   }
 })
 
 address.addEventListener('change', function () {
   if (regexAddress.test(address.value) == false) {
     addressErrorMsg.textContent = ('Veuillez entrer une adresse sans caractères spéciaux.')
-  } else {
-    addressErrorMsg.insertAdjacentHTML ('beforeend', '')
   }
 })
 
 city.addEventListener('change', function () {
   if (regexAddress.test(city.value) == false) {
     cityErrorMsg.textContent = ('Veuillez entrer une ville sans caractères spéciaux.')
-  } else {
-    cityErrorMsg.insertAdjacentHTML ('beforeend', '')
   }
 })
 
 email.addEventListener('change', function () {
   if (regexEmail.test(email.value) == false) {
     emailErrorMsg.textContent = ('Veuillez entrer une adress email valide.')
-  } else {
-    emailErrorMsg.insertAdjacentHTML ('beforeend', '')
   }
 })
 
 //Construction de l'objet Contact et du tableau d'ID produits
 function setContactAndProduct () {
   const arrayProduct = []
-      for (let cartProduct of cart) {
-        if (arrayProduct.find((id) => id == cartProduct.id)) {
+      for (let product of cart) {
+        if (arrayProduct.find((id) => id == product.id)) {
         } else {
-          arrayProduct.push(cartProduct.id)
+          arrayProduct.push(product.id)
         }
       }
   const ContactAndProduct = {
@@ -203,26 +195,25 @@ function setContactAndProduct () {
   return ContactAndProduct
 }
 
-//Création de la fonction de POST des data Contacts et produits dans l'API
+//Création de la fonction de POST de ContactAndProduct dans l'API
 function postForm () {
   fetch ("http://localhost:3000/api/products/order", {
-      method : 'POST',
-      body : JSON.stringify(setContactAndProduct ()),
-      headers : {
+    method : 'POST',
+    body : JSON.stringify(setContactAndProduct ()),
+    headers : {
           'accept' : 'application/json',
           'content-type' : 'application/json',
-      }
+    }
   })
-  .then((res) => res.json())
-  .then((body) => {
-    window.location.href = "./confirmation.html?id=" + body.orderId
-    console.log(body)
-    localStorage.clear()
-  })
-  .catch((err) => console.log('erreur:' + err))
-}
+    .then((res) => res.json())
+    .then((body) => {
+      window.location.href = "./confirmation.html?id=" + body.orderId
+      localStorage.clear()
+    })
+    .catch((err) => console.log('erreur:' + err))
+  }
 
-//Ecoute du bouton order et appel de la fonction POST
+// Ecoute du bouton "Commander" et appel de la fonction POST
 order.addEventListener('click', function (e) {
   e.preventDefault();
   postForm ()
