@@ -57,8 +57,8 @@ function addToCart () {
     const currentProductColor = document.querySelector('#colors').value
 
 // Vérification que les champs quantités et couleurs sont bien remplis
-    if (currentProductQty <= 0 || currentProductColor === "") {
-        alert("Veuillez saisir un nombre d'article et sélectionner une couleur")
+    if (currentProductQty <= 0 || currentProductQty > 100 || currentProductColor === "") {
+        alert("Veuillez saisir une quantité entre 1 et 100 et sélectionner une couleur")
     }
     else {
 /**Recherche du produit sélectionné dans le cart

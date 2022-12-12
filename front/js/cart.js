@@ -16,75 +16,79 @@ function getCart () {
 let cart = getCart()
 const cartItem = document.querySelector('#cart__items')
 
-if (cart.length == 0) {
-  cartItem.insertAdjacentHTML ('beforeend', `Votre panier est vide`)
-}
-
 // Requête de l'API pour récupérer tous les articles
-fetch("http://localhost:3000/api/products/")
-  .then((res) => res.json())
+function productFetch () {
+  fetch("http://localhost:3000/api/products/")
+    .then((res) => res.json())
 
-  .then((API) => {
-    
-    let totalQuantity = 0
-    let totalPrice = 0
+    .then((API) => {
 
-    // Construction et insertion du HTML pour chaque produit du panier
-    for (let product of cart) {
+      // Construction et insertion du HTML pour chaque produit du panier
+      for (let product of cart) {
 
-      for (let article of API) {
-        
-        if (product.id === article._id) {
-          cartItem.insertAdjacentHTML ('beforeend',
-              `<article class="cart__item" data-id="${product.id}" data-color="${product.color}">
-              <div class="cart__item__img">
-              <img src="${article.imageUrl}" alt="${article.altTxt}">
-              </div>
-              <div class="cart__item__content">
-              <div class="cart__item__content__description">
-                  <h2>${article.name}</h2>
-                  <p>${product.color}</p>
-                  <p>${article.price} €</p>
-              </div>
-              <div class="cart__item__content__settings">
-                  <div class="cart__item__content__settings__quantity">
-                  <p>Qté : </p>
-                  <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${product.quantity}">
-                  </div>
-                  <div class="cart__item__content__settings__delete">
-                  <p class="deleteItem">Supprimer</p>
-                  </div>
-              </div>
-              </div>
-          </article>`)
+        for (let article of API) {
+          
+          if (product.id === article._id) {
+            cartItem.insertAdjacentHTML ('beforeend',
+                `<article class="cart__item" data-id="${product.id}" data-color="${product.color}">
+                <div class="cart__item__img">
+                <img src="${article.imageUrl}" alt="${article.altTxt}">
+                </div>
+                <div class="cart__item__content">
+                <div class="cart__item__content__description">
+                    <h2>${article.name}</h2>
+                    <p>${product.color}</p>
+                    <p>${article.price} €</p>
+                </div>
+                <div class="cart__item__content__settings">
+                    <div class="cart__item__content__settings__quantity">
+                    <p>Qté : </p>
+                    <input type="number" class="itemQuantity" name="itemQuantity" min="1" max="100" value="${product.quantity}">
+                    </div>
+                    <div class="cart__item__content__settings__delete">
+                    <p class="deleteItem">Supprimer</p>
+                    </div>
+                </div>
+                </div>
+            </article>`)
 
-          // Calcul et insertion des quantités et du prix total
-          totalQuantity +=product.quantity
-          document.querySelector('#totalQuantity').textContent = totalQuantity
-
-          totalPrice +=article.price * product.quantity
-          document.querySelector('#totalPrice').textContent = totalPrice
-        } 
+            // Calcul et insertion des quantités et du prix total
+            document.querySelector('#totalQuantity').textContent = totalNumberProduct(product)
+            document.querySelector('#totalPrice').textContent = totalPrice(product, article)
+          } 
+        }
       }
 
-    }
+      // Ecoute des changements de quantités
+      document.querySelectorAll('.itemQuantity')
+      .forEach(function (inputQty) {
+        inputQty.addEventListener('change', function (e) {
+          updateCart(inputQty, e.target.value)})}
+      )
+      // Ecoute du bouton "supprimer"
+      document.querySelectorAll('.deleteItem')
+      .forEach(function (buttonSuppr) {
+        buttonSuppr.addEventListener('click', function () {
+          updateCart(buttonSuppr, 0)})}
+      ) 
+    })
 
-    // Ecoute des changements de quantités
-    document.querySelectorAll('.itemQuantity')
-    .forEach(function (inputQty) {
-      inputQty.addEventListener('change', function (e) {
-        updateCart(inputQty, e.target.value)})}
-    )
-    // Ecoute du bouton "supprimer"
-    document.querySelectorAll('.deleteItem')
-    .forEach(function (buttonSuppr) {
-      buttonSuppr.addEventListener('click', function () {
-        updateCart(buttonSuppr, 0)})}
-    ) 
-  })
-  
-  .catch((err) => console.log('Impossible de contacter le serveur'))
+    .catch((err) => console.log(err))
+}
+    
+//Fonction de calcul du nombre total de produits
+function totalNumberProduct (product) {
+  let totalQuantity = 0
+  totalQuantity +=product.quantity
+  return totalQuantity
+}
 
+//Fonction de calcul du prix total
+function totalPrice (product, article) {
+  let totalPrice = 0
+  totalPrice +=article.price * product.quantity
+  return totalPrice
+}
 
 //Fonction de modification/Suppression d'un produit
 function updateCart (domElement, quantityValue) {
@@ -96,8 +100,8 @@ function updateCart (domElement, quantityValue) {
 
   // Target le produit correspondant aux boutons et retrieve l'id et la couleur de ses attributs
   let currentProduct = domElement.closest("article")
-  let currentProductId = currentElt.getAttribute('data-id')
-  let currentproductColor = currentElt.getAttribute('data-color')
+  let currentProductId = currentProduct.getAttribute('data-id')
+  let currentproductColor = currentProduct.getAttribute('data-color')
 
   //Recherche du produit actuel dans le panier
   for (let product of cart) {
@@ -108,12 +112,53 @@ function updateCart (domElement, quantityValue) {
     // Si les quantités sont à 0 : Supprimer le produit du panier et du DOM
     if (product.quantity <=0) {
       cart.splice(cart.indexOf(product), 1) // Indexof cherche l'Index d'un produit
-      currentElt.remove() // La méthode Element.remove() retire l'élément courant du DOM
+      currentProduct.remove() // La méthode Element.remove() retire l'élément courant du DOM
     }
+
+    if (product.quantity >100) {
+      alert("Vous ne pouvez saisir une quantité supérieure à 100")
+    }
+
   }    
   // Enregistrer dans le localStorage et recharger la page
   saveCart(cart)
   window.location.reload()
+}
+
+//Fonction de classement des produits par id
+function getSortedProducts (cart) {
+  return cart.sort(function (a, b) {
+    if (a.id < b.id)
+      return -1
+    if (a.id > b.id)
+      return 1
+    if (a.id === b.id)
+      return 0
+  })
+}
+
+//Fonction de classement des produits par id
+function getSortedProductsByColor (cart) {
+  return cart.sort(function (a, b) {
+    var mapped = cart.color.map(function(e, i) {
+      return { index: i, value: e.toLowerCase() };
+    })
+    if (a.color < b.color)
+      return -1
+    if (a.color > b.color)
+      return 1
+    if (a.color === b.color)
+      return 0
+  })
+}
+
+// Si le panier n'est pas vide, affichage du panier classé par modèle
+if (cart.length == 0) {
+  cartItem.insertAdjacentHTML ('beforeend', `Votre panier est vide`)
+} else {
+productFetch()
+getSortedProducts (cart)
+getSortedProductsByColor (cart)
 }
 
 // Target des champs du formulaire
@@ -140,38 +185,6 @@ const emailErrorMsg = document.querySelector('#emailErrorMsg')
 const regexName = /^[a-zA-ZàèìòùÀÈÌÒÙáéíóúýÁÉÍÓÚÝâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÿÄËÏÖÜŸçÇßØøÅåÆæœ\s\,\'\-]*$/i;
 const regexAddress = /^[a-zA-Z0-9àèìòùÀÈÌÒÙáéíóúýÁÉÍÓÚÝâêîôûÂÊÎÔÛãñõÃÑÕäëïöüÿÄËÏÖÜŸçÇßØøÅåÆæœ\s\,\'\-]*$/i;
 const regexEmail = /^[0-9a-z._-]+@{1}[0-9a-z.-]{2,}[.]{1}[a-z]{2,4}$/i;
-
-// Ecoute des différents champs du formulaire et soumission aux Regex
-firstName.addEventListener('change', function () {
-  if (regexName.test(firstName.value) == false) {
-    firstNameErrorMsg.textContent = ('Veuillez entrer un prénom sans chiffre ni caractères spéciaux')
-  } else {
-  } 
-})
-
-lastName.addEventListener('change', function () {
-  if (regexName.test(lastName.value) == false) {
-    lastNameErrorMsg.textContent = ('Veuillez entrer un nom sans chiffre ni caractères spéciaux')
-  }
-})
-
-address.addEventListener('change', function () {
-  if (regexAddress.test(address.value) == false) {
-    addressErrorMsg.textContent = ('Veuillez entrer une adresse sans caractères spéciaux.')
-  }
-})
-
-city.addEventListener('change', function () {
-  if (regexAddress.test(city.value) == false) {
-    cityErrorMsg.textContent = ('Veuillez entrer une ville sans caractères spéciaux.')
-  }
-})
-
-email.addEventListener('change', function () {
-  if (regexEmail.test(email.value) == false) {
-    emailErrorMsg.textContent = ('Veuillez entrer une adress email valide.')
-  }
-})
 
 //Construction de l'objet Contact et du tableau d'ID produits
 function setContactAndProduct () {
@@ -213,10 +226,34 @@ function postForm () {
     .catch((err) => console.log('erreur:' + err))
   }
 
-// Ecoute du bouton "Commander" et appel de la fonction POST
+// Ecoute du bouton "Commander"
 order.addEventListener('click', function (e) {
   e.preventDefault();
-  postForm ()
+  // Soumission des différents champs du formulaire aux Regex
+  const firstNameTest = regexName.test(firstName.value);
+  const lastNameTest = regexName.test(lastName.value);
+  const addressTest = regexAddress.test(address.value);
+  const cityTest = regexAddress.test(city.value);
+  const emailTest = regexEmail.test(email.value);
+  // Si erreur : message d'erreur
+  if (firstNameTest == false || lastNameTest == false || addressTest == false || cityTest == false || emailTest == false) {
+    if (firstNameTest == false) {
+      firstNameErrorMsg.textContent = ('Veuillez entrer un prénom sans chiffre ni caractères spéciaux')
+    } else {firstNameErrorMsg.textContent = null}
+    if (lastNameTest == false) {
+      lastNameErrorMsg.textContent = ('Veuillez entrer un nom sans chiffre ni caractères spéciaux')
+    } else {lastNameErrorMsg.innerHTML = null}
+    if (addressTest == false) {
+      addressErrorMsg.textContent = ('Veuillez entrer une adresse sans caractères spéciaux.')
+    } else {addressErrorMsg.innerHTML = null}
+    if (cityTest == false) {
+      cityErrorMsg.textContent = ('Veuillez entrer une ville sans caractères spéciaux.')
+    } else {cityErrorMsg.innerHTML = null}
+    if (emailTest == false) {
+      emailErrorMsg.textContent = ('Veuillez entrer une adress email valide.')
+    } else {emailErrorMsg.innerHTML = null}
+  // Si pas d'erreurs : appel de la fonction POST
+  } else {postForm ()}
 })
 
 
