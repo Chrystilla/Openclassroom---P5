@@ -14,7 +14,9 @@ function getCart () {
 }
 
 let cart = getCart()
+console.log(cart)
 const cartItem = document.querySelector('#cart__items')
+let cartPrice = []
 
 // Requête de l'API pour récupérer tous les articles
 function productFetch () {
@@ -51,13 +53,14 @@ function productFetch () {
                 </div>
                 </div>
             </article>`)
-
-            // Calcul et insertion des quantités et du prix total
-            document.querySelector('#totalQuantity').textContent = totalNumberProduct(product)
-            document.querySelector('#totalPrice').textContent = totalPrice(product, article)
-          } 
+            cartPrice.push(article.price)
+          }
         }
       }
+
+      // Insertion des quantités et du prix total
+      document.querySelector('#totalQuantity').textContent = setTotalQuantity()
+      document.querySelector('#totalPrice').textContent = setTotalPrice()
 
       // Ecoute des changements de quantités
       document.querySelectorAll('.itemQuantity')
@@ -65,6 +68,7 @@ function productFetch () {
         inputQty.addEventListener('change', function (e) {
           updateCart(inputQty, e.target.value)})}
       )
+
       // Ecoute du bouton "supprimer"
       document.querySelectorAll('.deleteItem')
       .forEach(function (buttonSuppr) {
@@ -77,16 +81,20 @@ function productFetch () {
 }
     
 //Fonction de calcul du nombre total de produits
-function totalNumberProduct (product) {
+function setTotalQuantity () {
   let totalQuantity = 0
-  totalQuantity +=product.quantity
+  for (let product of cart) {
+    totalQuantity += product.quantity
+  }
   return totalQuantity
 }
 
 //Fonction de calcul du prix total
-function totalPrice (product, article) {
+function setTotalPrice () {
   let totalPrice = 0
-  totalPrice +=article.price * product.quantity
+    for (let i=0; i<cartPrice.length; i++) {
+      totalPrice += cartPrice[i] * cart[i].quantity
+  }
   return totalPrice
 }
 
@@ -137,28 +145,12 @@ function getSortedProducts (cart) {
   })
 }
 
-//Fonction de classement des produits par id
-function getSortedProductsByColor (cart) {
-  return cart.sort(function (a, b) {
-    var mapped = cart.color.map(function(e, i) {
-      return { index: i, value: e.toLowerCase() };
-    })
-    if (a.color < b.color)
-      return -1
-    if (a.color > b.color)
-      return 1
-    if (a.color === b.color)
-      return 0
-  })
-}
-
 // Si le panier n'est pas vide, affichage du panier classé par modèle
 if (cart.length == 0) {
   cartItem.insertAdjacentHTML ('beforeend', `Votre panier est vide`)
 } else {
 productFetch()
 getSortedProducts (cart)
-getSortedProductsByColor (cart)
 }
 
 // Target des champs du formulaire
