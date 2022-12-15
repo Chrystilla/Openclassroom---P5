@@ -14,7 +14,6 @@ function getCart () {
 }
 
 let cart = getCart()
-console.log(cart)
 const cartItem = document.querySelector('#cart__items')
 let cartPrice = []
 
