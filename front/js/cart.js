@@ -100,37 +100,35 @@ function setTotalPrice () {
 //Fonction de modification/Suppression d'un produit
 function updateCart (domElement, quantityValue) {
 
-  // Vérification que la quantityValue a été passée en type nombre
+// Vérification que la quantityValue a été passée en type nombre
   if (typeof quantityValue !== "number") {
     quantityValue = parseInt(quantityValue)
   }
 
-  // Target le produit correspondant aux boutons et retrieve l'id et la couleur de ses attributs
+// Target le produit correspondant aux boutons et retrieve l'id et la couleur de ses attributs
   let currentProduct = domElement.closest("article")
   let currentProductId = currentProduct.getAttribute('data-id')
-  let currentproductColor = currentProduct.getAttribute('data-color')
+  let currentProductColor = currentProduct.getAttribute('data-color')
 
-  //Recherche du produit actuel dans le panier
-  for (let product of cart) {
-    if (product.id == currentProductId && product.color == currentproductColor) {
-      // Si le produit est trouvé : modifier ses quantités 
-      product.quantity = quantityValue
-    }
-    // Si les quantités sont à 0 : Supprimer le produit du panier et du DOM
-    if (product.quantity <=0) {
-      cart.splice(cart.indexOf(product), 1) // Indexof cherche l'Index d'un produit
-      currentProduct.remove() // La méthode Element.remove() retire l'élément courant du DOM
-    }
-
-    if (product.quantity >100) {
-      alert("Vous ne pouvez saisir une quantité supérieure à 100")
-    }
-
-  }    
+//Recherche du produit ciblé dans le panier
+  let foundProduct = cart.find (element => element.id == currentProductId && element.color == currentProductColor)
+  // Lorsque le produit est trouvé : modifier ses quantités
+  if (foundProduct != undefined) {
+    foundProduct.quantity = quantityValue
+  }
+// Si les quantités sont à 0 : Supprimer le produit du panier
+  if (foundProduct.quantity <=0) {
+    cart.splice(cart.indexOf(foundProduct), 1) // Indexof cherche l'Index d'un produit
+  }
+// Si les quantités sont à > 100 : message d'alerte
+  if (foundProduct.quantity >100) {
+    alert("Vous ne pouvez saisir une quantité supérieure à 100")
+  }
   // Enregistrer dans le localStorage et recharger la page
   saveCart(cart)
   window.location.reload()
-}
+}    
+
 
 //Fonction de classement des produits par id
 function getSortedProducts (cart) {

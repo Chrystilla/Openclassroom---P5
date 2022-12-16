@@ -3,10 +3,10 @@ const url_id = window.location.search;
 
 // Extraction de l'id
 const url = new URLSearchParams(url_id);
-const currentProductid = url.get("id")
+const currentProductId = url.get("id")
 
 // Requête de l'API pour récupérer la fiche produit sur laquel l'utilisateur a cliqué
-fetch("http://localhost:3000/api/products/" + currentProductid)
+fetch("http://localhost:3000/api/products/" + currentProductId)
     .then((res) => res.json())
 
 // Injection du produit dans le DOM
@@ -52,8 +52,7 @@ function addToCart () {
 // Récupère le panier sauvegardé dans le localStorage
     let cart = getCart ();
     const currentProductName = document.querySelector('#title').textContent
-// parseInt converti une chaîne en nombre
-    const currentProductQty = parseInt(document.querySelector('#quantity').value) 
+    const currentProductQty = parseInt(document.querySelector('#quantity').value) // parseInt converti une string en nombre
     const currentProductColor = document.querySelector('#colors').value
 
 // Vérification que les champs quantités et couleurs sont bien remplis
@@ -61,21 +60,19 @@ function addToCart () {
         alert("Veuillez saisir une quantité entre 1 et 100 et sélectionner une couleur")
     }
     else {
-/**Recherche du produit sélectionné dans le cart
- * find permet de chercher un élément dans un tableau par rapport à une condition*/ 
-        let foundProduct = cart.find((element) => element.id == currentProductid && element.color == currentProductColor);
+//Recherche dans le panier du produit que je souhaite ajouter
+        let foundProduct = cart.find((element) => element.id == currentProductId && element.color == currentProductColor);
 // Si le produit existe déjà, augmenter ses quantités
         if (foundProduct != undefined) {
             foundProduct.quantity += currentProductQty;
-
 // sinon crée l'objet et l'envoie dans le localStorage
         } else {
-                let newArticle ={
-                    id: currentProductid,
-                    color: currentProductColor,
-                    quantity: currentProductQty
-                }
-                cart.push(newArticle);
+             let newArticle ={
+                id: currentProductId,
+                color: currentProductColor,
+                quantity: currentProductQty
+            }
+            cart.push(newArticle);
         }
         saveCart(cart)
         alert(`${currentProductQty} ${currentProductName} de couleur ${currentProductColor} a bien été ajouté au panier !`)
