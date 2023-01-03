@@ -113,16 +113,19 @@ function updateCart (domElement, quantityValue) {
 //Recherche du produit ciblé dans le panier
   let foundProduct = cart.find (element => element.id == currentProductId && element.color == currentProductColor)
   // Lorsque le produit est trouvé : modifier ses quantités
+  // Si les quantités sont à > 100 : message d'alerte
+
   if (foundProduct != undefined) {
     foundProduct.quantity = quantityValue
+    window.location.reload()
   }
 // Si les quantités sont à 0 : Supprimer le produit du panier
   if (foundProduct.quantity <=0) {
     cart.splice(cart.indexOf(foundProduct), 1) // Indexof cherche l'Index d'un produit
   }
-// Si les quantités sont à > 100 : message d'alerte
   if (foundProduct.quantity >100) {
     alert("Vous ne pouvez saisir une quantité supérieure à 100")
+    foundProduct.quantity = product.quantity
   }
   // Enregistrer dans le localStorage et recharger la page
   saveCart(cart)
